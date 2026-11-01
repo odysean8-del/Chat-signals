@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827"><meta name="description" content="Private, mobile-friendly relationship conversation analysis from chat screen recordings.">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
+<title>Chat Signals — AI Edition</title>
+<style>
+:root{--bg:#0b1220;--panel:#121e30;--panel2:#19283d;--text:#eef4ff;--muted:#9fb0c7;--line:#2b3b52;--accent:#8b9cff;--good:#55d6a3;--warn:#ffd27a}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#101b2e,#080e19 60%);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+header{padding:28px 18px 20px;max-width:900px;margin:auto}h1{font-size:clamp(30px,8vw,46px);line-height:1.05;margin:8px 0}h2{font-size:21px;margin:0 0 12px}.eyebrow{color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.16em}.sub{color:var(--muted);max-width:620px}
+main{max-width:900px;margin:auto;padding:0 14px 50px;display:grid;gap:14px}.card{background:rgba(18,30,48,.96);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 12px 35px #0003}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric{background:var(--panel2);border-radius:14px;padding:13px}.metric b{font-size:25px;display:block}.metric small,.muted{color:var(--muted)}
+button,.filebtn{border:0;border-radius:13px;padding:13px 16px;background:var(--accent);color:#101827;font-weight:800;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-height:46px}
+button.secondary{background:#263750;color:var(--text);border:1px solid var(--line)}
+.topline{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.menu-wrap{position:relative;z-index:5}.menu-btn{font-size:27px;line-height:1;width:48px;padding:6px}.menu-panel{position:absolute;right:0;top:52px;min-width:220px;background:#17263a;border:1px solid var(--line);border-radius:14px;padding:7px;box-shadow:0 14px 35px #0008}.menu-item{display:block;width:100%;text-align:left;padding:12px;border:0;border-radius:9px;background:transparent;color:var(--text);text-decoration:none;font:inherit;font-weight:650}.menu-item:hover{background:#293c58}button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{width:100%;background:#0d1727;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit}
+label{display:block;color:var(--muted);font-size:13px;margin:10px 0 6px}
+video{width:100%;max-height:52vh;border-radius:14px;background:#000;margin-top:10px}
+.progress{height:8px;background:#263750;border-radius:20px;overflow:hidden}.progress>div{height:100%;width:0;background:var(--good);transition:width .2s}
+#status{color:var(--muted);font-size:14px;margin:10px 0}.msg{border-bottom:1px solid var(--line);padding:10px 0}.msg:last-child{border:0}.tag{font-size:11px;padding:3px 7px;border-radius:20px;background:#293c58;color:#cbd8ef}
+canvas{display:none}.bar{height:10px;background:#2b3b52;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}
+footer{max-width:900px;margin:0 auto;padding:0 18px 35px;color:var(--muted);font-size:12px}
+@media(min-width:700px){main{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.ai-panel{margin-top:20px;padding:16px;border:1px solid #52648a;border-radius:15px;background:#101b2e}.ai-report{white-space:pre-wrap;line-height:1.65;background:#0c1625;border-radius:12px;padding:14px;margin-top:12px}.ai-report h4{margin:12px 0 5px}
+</style>
+</head>
+<body>
+<header><div class="topline"><div><div class="eyebrow">PRIVATE CONVERSATION INSIGHTS</div><h1>Chat Signals<span style="color:var(--accent)">.</span></h1></div><div class="menu-wrap"><button id="menuBtn" class="secondary menu-btn" aria-label="Open menu" aria-expanded="false">⋮</button><nav id="menuPanel" class="menu-panel" hidden><button class="menu-item" id="menuHelp">How to use</button><button class="menu-item" id="menuExport">Export transcript CSV</button><button class="menu-item" id="menuClear">Clear this session</button><a class="menu-item" href="#privacy">Privacy & limitations</a></nav></div></div><p class="sub">Turn a chat screen recording into a readable transcript and a thoughtful relationship communication report. Designed for your phone.</p><div class="row"><span class="tag">Mobile-first</span><span class="tag">Browser-based OCR</span><span class="tag">Local processing</span></div></header>
+<main>
+<section class="card wide">
+<h2>1 · Add your screen recording</h2>
+<p class="muted">Choose an Instagram DM recording. For best results, scroll slowly and pause briefly on each section of the chat.</p>
+<label for="videoFile">Video file (MP4, MOV, WebM)</label><input id="videoFile" type="file" accept="video/*">
+<video id="preview" controls playsinline hidden></video>
+<div class="row" style="margin-top:12px"><button id="extractBtn" disabled>Extract messages</button><button class="secondary" id="installBtn" hidden>Install app</button></div>
+<div class="progress" style="margin-top:14px"><div id="progress"></div></div><div id="status" role="status">Your video stays in this browser tab during local extraction.</div>
+</section>
+<section class="card">
+<h2>2 · Identify participants</h2>
+<label for="leftName">Name for left-side bubbles</label><input id="leftName" value="Person A">
+<label for="rightName">Name for right-side bubbles</label><input id="rightName" value="Person B">
+<label for="interval">Frame sampling interval</label><select id="interval"><option value="1.2">1.2 seconds · faster</option><option value="0.7" selected>0.7 seconds · balanced</option><option value="0.4">0.4 seconds · detailed</option></select>
+<p class="muted">Left/right bubble alignment is a guess. Check it against the actual chat.</p>
+</section>
+<section class="card wide">
+<h2>3 · Review extracted transcript</h2><p class="muted">Correct OCR mistakes, delete UI text, and fix who sent each message before analysis.</p>
+<div id="transcript" class="muted">No messages extracted yet.</div>
+<div class="row" style="margin-top:12px"><button id="analyseBtn" disabled>Run evidence-based analysis</button><button class="secondary" id="csvBtn" disabled>Export CSV</button></div>
+<div class="ai-panel"><h3>AI relationship interpretation</h3><p class="muted">Ask AI to interpret the corrected transcript for communication patterns, emotional tone, possible misunderstandings, reciprocity and practical next steps. It will distinguish evidence from uncertainty.</p><label for="aiAccessCode">Private AI access code</label><input id="aiAccessCode" type="password" autocomplete="current-password" placeholder="Set this in Netlify first"><button id="aiBtn" disabled>✨ Analyse with AI</button><p id="aiStatus" class="muted" role="status">First extract and review messages. AI becomes available after transcript review.</p><div id="aiReport" class="ai-report" hidden></div></div>
+</section>
+<section class="card wide" id="results" hidden>
+<h2>4 · Relationship communication report</h2><div class="grid" id="metrics"></div>
+<div style="margin-top:18px"><h3>Communication balance</h3><div id="balance"></div></div>
+<div style="margin-top:18px"><h3>Evidence-led observations</h3><div id="observations"></div></div>
+<div style="margin-top:18px"><h3>Interpretation limits</h3><p class="muted">These are communication indicators, not proof of attraction, love, honesty, attachment style or intent. OCR can miss or misread content. Screen-recording playback time is not original message time, so response latency cannot be inferred reliably.</p></div>
+</section>
+<section class="card wide" id="privacy">
+<h2>Privacy by design</h2>
+<ul class="muted"><li>Video OCR and basic analysis run in your browser using Tesseract.js.</li><li>Local OCR and basic metrics run in your browser. If you choose AI analysis, only the corrected transcript is sent securely to the configured AI service through the site server function. Video files are not sent.</li><li>Use only chats you have permission to analyse. Avoid sharing reports containing private information.</li></ul>
+</section>
+</main>
+<footer>Chat Signals V3 · Installable progressive web app · For reflection, not relationship verdicts.</footer>
+<canvas id="frameCanvas"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="app.js"></script>
+</body></html>

@@ -1,7 +1,5 @@
+[build]
+  publish = "public"
+
 [functions]
   directory = "netlify/functions"
-
-[[headers]]
-  for = "/netlify/functions/*"
-  [headers.values]
-    Cache-Control = "no-store"
