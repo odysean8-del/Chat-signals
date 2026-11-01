@@ -118,11 +118,28 @@ $("aiBtn").onclick = async () => {
   button.disabled = true; button.textContent = "AI is analysing…"; $("aiStatus").textContent = "Sending only the reviewed text transcript securely to the configured AI service. The video itself is not sent.";
   $("aiReport").hidden = true;
   try {
-    const response = await fetch("/.netlify/functions/chat-analysis", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: reviewed, accessCode: $("aiAccessCode").value }) });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || `AI request failed (${response.status}).`);
-    $("aiReport").textContent = result.analysis; $("aiReport").hidden = false; $("aiStatus").textContent = "AI interpretation complete. Read it as a cautious second opinion, not a verdict.";
+    const response = await fetch("/api/ai/jobs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "analysis", accessCode: $("aiAccessCode").value, payload: { messages: reviewed.map((m, i) => ({ ...m, n: i + 1 })), participants: [a, b], source: "screen recording" } }) });
+    const started = await response.json();
+    if (!response.ok) throw new Error(started.error || `AI request failed (${response.status}).`);
+    let job;
+    for (let i = 0; i < 150; i++) {
+      await new Promise(r => setTimeout(r, 4000));
+      const poll = await fetch(`/api/ai/jobs/${started.id}`);
+      job = await poll.json();
+      if (!poll.ok) throw new Error(job.error || "AI job failed.");
+      if (job.status === "error") throw new Error(job.error || "AI analysis failed.");
+      if (job.status === "done") break;
+    }
+    if (job?.status !== "done") throw new Error("AI analysis timed out. Please try again.");
+    const r = job.result.report, quotes = ev => (ev || []).map(e => `   “${e.quote}” (#${e.message})`).join("\n");
+    const list = (title, items) => items?.length ? `${title}:\n` + items.map(x => `• ${x.text}\n${quotes(x.evidence)}`).join("\n") + "\n" : "";
+    let out = `Evidence level: ${r.evidence_level} — ${r.evidence_level_reason}\n\n`;
+    for (const [k, t] of [["overall","Overall summary"],["positive_signals","Positive signals"],["concerning_signals","Concerning signals"],["emotional_patterns","Emotional patterns"],["balance","Conversation balance"],["misunderstandings","Possible misunderstandings"],["changes_over_time","Changes over time"],["compatibility","Communication compatibility"],["conflict_areas","Potential conflict areas"]]) {
+      const sct = r[k]; out += `== ${t} ==\n${sct.summary}\n` + list("Observed", sct.observations) + list("Interpretation (tentative)", sct.interpretations) + (sct.uncertainties.length ? "Uncertain:\n" + sct.uncertainties.map(u => "• " + u).join("\n") + "\n" : "") + "\n";
+    }
+    out += "== Suggestions ==\n" + r.suggestions.map(x => `• ${x.suggestion} — ${x.why}${x.example_phrasing ? `\n   e.g. “${x.example_phrasing}”` : ""}`).join("\n") + "\n\n== Questions to reflect on ==\n" + r.reflection_questions.map(q => "• " + q).join("\n") + "\n\n== Limitations ==\n" + r.limitations.map(q => "• " + q).join("\n");
+    $("aiReport").textContent = out; $("aiReport").hidden = false; $("aiStatus").textContent = "AI interpretation complete. Read it as a cautious second opinion, not a verdict.";
   } catch (error) {
-    $("aiStatus").textContent = error.message.includes("Failed to fetch") ? "AI endpoint unavailable. This updated package must be deployed with Netlify Functions and an OPENAI_API_KEY setting." : error.message;
+    $("aiStatus").textContent = error.message.includes("Failed to fetch") ? "AI endpoint unavailable. Check your connection and try again." : error.message;
   } finally { button.disabled = false; button.textContent = label; }
 };
