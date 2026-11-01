@@ -1,0 +1,17 @@
+{
+  "name": "chat-signals",
+  "version": "4.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mobile-first, privacy-minded relationship chat communication analyser.",
+  "scripts": {
+    "dev": "netlify dev --port 8889"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^10.0.0",
+    "openai": "^5.0.0"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^4.0.0"
+  }
+}
